@@ -7,7 +7,8 @@ Rake::TestTask.new(:test) do |test|
 end
 
 task :viz do
-  [ [6, 1, 1],
+  [ [6, 1, 5],
+    [6, 1, 1],
     [6, 4, 5] ].each do |vars|
     c, q, t = vars
     ENV['C'], ENV['Q'], ENV['T'] = vars.map(&:to_s)

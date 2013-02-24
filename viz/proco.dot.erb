@@ -23,20 +23,22 @@ digraph G {
     G [label = "Proco", shape = circle];
 
     subgraph cluster_queues {
-      label = "Queues";
+      label = "Buffer";
     <% queues.times do |i| %>
-      Q<%= i %> [shape = record, height = 0.1, label = "{<h> | | | | |<t> }"];
-      D<%= i %> [label = "Proco::Dispatcher"];
+      Q<%= i %> [shape = record, height = 0.01, label = "{<h> | | | | |<t> }"];
+      D<%= i %> [label = "Dispatcher"];
       Q<%= i %> -> D<%= i %>;
     <% end %>
     }
     subgraph cluster_threqds {
-      label = "Proco::MT::Pool";
+      label = "Executor Pool";
       <% threads.times do |t| %>
-        T<%= t %> [shape = box3d, label = "Proco::MT::Worker"];
+        T<%= t %> [shape = box3d, label = "Executor"];
       <% end %>
     }
   }
+
+  // T<%= threads - 1 %>:e -> C<%= clients - 1%> [constraint = false];
 
 <% queues.times do |i| %>
   G -> Q<%= i %>:h:w;
