@@ -1,0 +1,47 @@
+#!rake viz
+<%
+  clients = (ENV['C'] || 6).to_i
+  queues  = (ENV['Q'] || 4).to_i
+  threads = (ENV['T'] || 5).to_i
+%>
+digraph G {
+  // Comic Sans FTW!
+  graph [fontname = "Comic Sans"];
+  node  [fontname = "Comic Sans"];
+  edge  [fontname = "Comic Sans"];
+
+  rankdir = LR;
+  ranksep = 1;
+  ranksep = 0.5;
+
+<% clients.times do |i| %>
+  C<%= i %> [shape = ellipse, label = "Client"];
+  C<%= i %> -> G;
+<% end %>
+
+  subgraph cluster_proco {
+    G [label = "Proco", shape = circle];
+
+    subgraph cluster_queues {
+      label = "Queues";
+    <% queues.times do |i| %>
+      Q<%= i %> [shape = record, height = 0.1, label = "{<h> | | | | |<t> }"];
+      D<%= i %> [label = "Proco::Dispatcher"];
+      Q<%= i %> -> D<%= i %>;
+    <% end %>
+    }
+    subgraph cluster_threqds {
+      label = "Proco::MT::Pool";
+      <% threads.times do |t| %>
+        T<%= t %> [shape = box3d, label = "Proco::MT::Worker"];
+      <% end %>
+    }
+  }
+
+<% queues.times do |i| %>
+  G -> Q<%= i %>:h:w;
+  <% threads.times do |t| %>
+  D<%= i %>:e -> T<%= t %>:w;
+  <% end %>
+<% end %>
+}
