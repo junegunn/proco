@@ -21,7 +21,7 @@ class TestQueue < MiniTest::Unit::TestCase
     t2 = Thread.new {
       future = items = nil
       LPS.freq(10).while { future, items = queue.take_all }.loop do
-        p future => items
+        # p future => items
 
         num_batches += 1
         num_items   += items.length

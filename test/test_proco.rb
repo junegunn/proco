@@ -47,43 +47,41 @@ class TestProco < MiniTest::Unit::TestCase
 
     # Wait until the batch containing the item is processed
     assert_equal 150,   futures.uniq.map { |f| f.get[:return] }.inject(:+)
-    assert_equal true,  proco.exit.empty?
+
+    proco.exit
     assert_equal false, proco.running?
   end
 
   def test_tries
-    proco = Proco.queue_size(1000)
-    tries = {}
-    proco.start do |items|
-      tries[items] ||= 0
-      tries[items] += 1
-      p items
+    {
+      1 => 0,
+      2 => 0,
+      3 => 1000,
+      4 => 1000
+    }.each do |t, exp|
+      proco = Proco.tries(t).queue_size(900)
+      tries = {}
+      cnt = 0
+      proco.start do |items|
+        tries[items] ||= 0
+        tries[items] += 1
 
-      if tries[items] < 3
-        raise RuntimeError
-      else
-        sleep 1
-        true
+        if tries[items] < 3
+          raise RuntimeError
+        else
+          cnt += items.length
+          true
+        end
       end
-    end
 
-    1000.times do |i|
-      proco.submit! i
-    end
+      1000.times do |i|
+        proco.submit! i
+      end
 
-    proco.exit
-  end
+      proco.exit
 
-  def test_exit_with_exceptions
-    proco = Proco.new
-    proco.start do |items|
-      sleep 1
-      raise Exception
+      assert_equal exp, cnt
     end
-    100.times do |i|
-      proco.submit! i
-    end
-    p proco.exit
   end
 
   def test_kill

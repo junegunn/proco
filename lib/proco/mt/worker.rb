@@ -29,9 +29,9 @@ class Worker
     end
   end
 
-private
-  def spawn_init
-
+  def exit
+    wait_until { @block.nil? }
+    super
   end
 end#Worker
 end#MT

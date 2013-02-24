@@ -32,7 +32,7 @@ class Proco
     @running = true
     @pool = Proco::MT::Pool.new(options[:threads])
     @dispatchers = options[:queues].times.map { |i|
-      Dispatcher.new(self, options[:interval], options[:queue_size], @pool, block)
+      Dispatcher.new(self, @pool, block)
     }
 
     self
@@ -55,16 +55,12 @@ class Proco
   end
 
   # Stops Proco, returns results from remaining submissions in the queue.
-  # @return [Array[Hash]]
+  # @return [nil]
   def exit
     check_running
     @running = false
-    @dispatchers.each(&:invalidate)
+    @dispatchers.each(&:exit)
     @pool.exit
-
-    @queues.map { |queue|
-      inner_loop queue
-    }.compact
   end
 
   # @return [nil]
