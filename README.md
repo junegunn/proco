@@ -2,14 +2,19 @@ Proco
 =====
 
 Proco is a lightweight asynchronous task executor service with a thread pool
-especially designed for efficient processing of multiple items.
+especially designed for efficient batch processing of multiple items.
 
 Producer-consumer
 -----------------
 
 Proco implements a traditional [producer-consumer model](http://en.wikipedia.org/wiki/Producer-consumer_problem)
-where mutliple clients simultaneously submits (produces) items to be processed,
-and threads in the thread pool process (consumes) items concurrently to maximize throughput.
+where mutliple clients simultaneously submits (*produces*) items to be processed,
+and threads in the thread pool process (*consumes*) items concurrently.
+A client can asynchronously submit an item and optionally wait for its completion.
+A submitted item is put into a fixed sized queue, which is then taken out by one of the executor threads.
+In a highly concurrent environment a queue can become a point of contention,
+thus Proco allows having multiple queues.
+However, if you need strict serializability (FCFS), you should just have a single queue and a single executor thread.
 
 Batch processing
 ----------------
