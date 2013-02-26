@@ -1,5 +1,4 @@
 require 'proco/version'
-require 'proco/logger'
 require 'proco/mt/base'
 require 'proco/mt/threaded'
 require 'proco/mt/worker'
