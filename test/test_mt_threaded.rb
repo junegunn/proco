@@ -11,7 +11,7 @@ class MTThreadedSub
   end
 end
 
-class TestMTBase < MiniTest::Unit::TestCase
+class TestMTThreaded < MiniTest::Unit::TestCase
   def test_mt_base
     t = MTThreadedSub.new
     assert_equal false, t.running?

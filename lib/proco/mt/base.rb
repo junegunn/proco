@@ -16,14 +16,15 @@ module Base
         end
         block.call
       ensure
-        @cv.signal
+        # A good discussion on the use of broadcast instead of signal
+        # http://stackoverflow.com/questions/37026/java-notify-vs-notifyall-all-over-again
+        @cv.broadcast
       end
     end
   end
 
   def wait_until &cond
-    do_when(cond) do
-    end
+    do_when(cond) {}
   end
 
   def signal &block

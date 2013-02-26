@@ -1,5 +1,5 @@
 require 'proco/version'
-require 'proco/initializer'
+require 'proco/logger'
 require 'proco/mt/base'
 require 'proco/mt/threaded'
 require 'proco/mt/worker'
@@ -7,12 +7,16 @@ require 'proco/mt/pool'
 require 'proco/dispatcher'
 require 'proco/future'
 require 'proco/queue'
+require 'option_initializer'
 
 class Proco
+  include OptionInitializer
+  option_initializer :interval, :threads, :tries, :queues, :queue_size, :batch
+
   attr_reader :options
 
   DEFAULT_OPTIONS = {
-    :interval   => 0.1,
+    :interval   => 0,
     :tries      => 1,
     :threads    => 1,
     :queues     => 1,

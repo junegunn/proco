@@ -1,4 +1,5 @@
 class Proco
+# @private
 class Dispatcher
   include Proco::MT::Threaded
 
@@ -22,8 +23,8 @@ class Dispatcher
     end
   end
 
-  def push *items
-    @queue.push *items
+  def push(*items)
+    @queue.push(*items)
   end
 
   def exit

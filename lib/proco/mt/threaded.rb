@@ -13,7 +13,7 @@ module Threaded
   end
 
   def exit
-    signal do
+    broadcast do
       @running = false
     end
     @thread.join
@@ -25,8 +25,8 @@ module Threaded
   end
 
   def spawn &block
-    @thread = ::Thread.new do
-      signal do
+    @thread = Thread.new do
+      broadcast do
         @running = true
       end
 
@@ -34,6 +34,8 @@ module Threaded
     end
 
     wait_until { running? }
+
+    @thread
   end
 end#Threaded
 end#MT

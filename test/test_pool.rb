@@ -5,14 +5,15 @@ require 'proco'
 
 class TestPool < MiniTest::Unit::TestCase
   def test_pool
-    pool = Proco::MT::Pool.new(4)
+    pool = Proco::MT::Pool.new(8)
     cnt = 0
-    pool.assign { cnt += 1 }
-    pool.assign { cnt += 2 }
-    pool.assign { cnt += 3 }
+    mtx = Mutex.new
+    1000.times do
+      pool.assign { mtx.synchronize { cnt += 3 } }
+    end
     pool.exit
-    assert_equal 3, pool.counter
-    assert_equal 6, cnt
+    assert_equal 1000, pool.counter
+    assert_equal 3000, cnt
   end
 end
 

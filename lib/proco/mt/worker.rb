@@ -1,5 +1,6 @@
 class Proco
 module MT
+# @private
 class Worker
   include Proco::MT::Threaded
 
