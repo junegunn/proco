@@ -2,19 +2,22 @@ Proco
 =====
 
 Proco is a lightweight asynchronous task executor service with a thread pool
-especially designed for efficient batch processing of multiple items.
+especially designed for efficient batch processing of multiple data items.
 
-Producer-consumer
------------------
+Architecture
+------------
 
-Proco implements a traditional [producer-consumer model](http://en.wikipedia.org/wiki/Producer-consumer_problem)
-where mutliple clients simultaneously submits (*produces*) items to be processed,
-and threads in the thread pool process (*consumes*) items concurrently.
-A client can asynchronously submit an item and optionally wait for its completion.
-A submitted item is put into a fixed sized queue, which is then taken out by one of the executor threads.
-In a highly concurrent environment a queue can become a point of contention,
-thus Proco allows having multiple queues.
-However, if you need strict serializability (FCFS), you should just have a single queue and a single executor thread.
+Proco implements the traditional [producer-consumer model](http://en.wikipedia.org/wiki/Producer-consumer_problem).
+
+- Mutliple clients simultaneously submits (*produces*) items to be processed.
+  - A client can asynchronously submit an item and optionally wait for its completion.
+- Executor threads in the thread pool process (*consumes*) items concurrently.
+- A submitted item is first put into a fixed sized queue.
+- A queue has its own dedicated dispatcher thread.
+- Each item in the queue is taken out by the dispatcher and assigned to one of the executor threads.
+  - Assignments can be done periodically at certain interval, where multiple items are assigned at once for batch processing (see next section).
+- In a highly concurrent environment, a queue becomes a point of contention, thus Proco allows having multiple queues.
+  - However, for strict serializability (FCFS), you should just have a single queue and a single executor thread (default).
 
 Batch processing
 ----------------
@@ -32,8 +35,15 @@ but wait a little while hoping that we receive more requests as well,
 so we can process them together with minimal amortized latency.
 
 It's a pretty common pattern, that most developers will be writing similar scenarios
-one way or another at some point. So why don't we make it reusable?
+one way or another at some point. So *why don't we make it reusable*?
 
+Proco was designed with this in mind.
+As described above, item assignments to executor threads can be done periodically at the specified interval,
+so that certain number of items are piled up between assignments and then assigned at once in batch.
+
+```ruby
+proco = Proco.interval(1).batch(true).new
+```
 
 Installation
 ------------
@@ -48,20 +58,20 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install grouper
+    $ gem install proco
 
 Basic usage
 -----------
 
 ```ruby
-require 'grouper'
+require 'proco'
 
-grouper = Grouper.interval(0.1).     # Runs every 0.1 second
-                  threads(4).        # 4 threads processing items every interval
-                  tries(2).          # Retry on processing error
-                  queue_size(1000)   # Each thread has a queue of size 1000
+proco = Proco.interval(0.1).     # Runs every 0.1 second
+              threads(4).        # 4 threads processing items every interval
+              tries(2).          # Retry on processing error
+              queue_size(1000)   # Each thread has a queue of size 1000
 
-grouper.start do |items|
+proco.start do |items|
   # Batch-process items
   items.each_slice(100) do |slice|
     # ...
@@ -71,10 +81,10 @@ grouper.start do |items|
 end
 
 # Synchronous submit
-result = grouper.submit rand(1000)
+result = proco.submit rand(1000)
 
 # Asynchronous(!) submit (can block if the queue is full)
-future = grouper.submit! rand(1000)
+future = proco.submit! rand(1000)
 
 # Wait until the batch containing the item is processed
 # (Commit notification)
@@ -83,10 +93,10 @@ result = future.get
 # ...
 
 # Process remaining submissions and terminate threads
-grouper.exit
+proco.exit
 
 # Or, kill them instantly
-# grouper.kill
+# proco.kill
 ```
 
 
