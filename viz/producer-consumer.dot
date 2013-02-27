@@ -1,0 +1,28 @@
+digraph G {
+  labelloc = "t";
+  label = "Basic producer-consumer configuration";
+
+  graph [fontname = "Gill Sans", fontsize = 12];
+  node  [fontname = "Gill Sans", fontsize = 12];
+  edge  [fontname = "Gill Sans", fontsize = 12];
+
+  rankdir = LR;
+  ranksep = 1;
+  // splines = ortho;
+
+  P0 -> Q:w;
+  P1 -> Q:w;
+  P2 -> Q:w;
+  Q [shape = record, height = 0.01, label = "{<h> | | | | |<t> }"];
+  Q:e -> C0;
+  Q:e -> C1;
+  Q:e -> C2;
+
+  P0 [label = "P"];
+  P1 [label = "P"];
+  P2 [label = "P"];
+
+  C0 [label = "C"];
+  C1 [label = "C"];
+  C2 [label = "C"];
+}

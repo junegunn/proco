@@ -1,0 +1,44 @@
+digraph G {
+  graph [fontname = "Gill Sans", fontsize = 12];
+  node  [fontname = "Gill Sans", fontsize = 12, shape = rect];
+  edge  [fontname = "Gill Sans", fontsize = 12];
+
+  rankdir = TB;
+  nodesep = 0.5;
+  ranksep = 0.1;
+
+  new        [label = "Proco.new"];
+  proco1     [label = "Proco (not started)" shape = oval, style = filled];
+  proco2     [label = "Proco (started)" shape = oval];
+  start      [label = "Proco#start"];
+  submit     [label = "Proco#submit"];
+  submita    [label = "Proco#submit!"];
+  future     [label = "Proco::Future", shape = oval];
+  future_get [label = "Proco::Future#get"];
+
+  new -> proco1 -> start -> proco2;
+  proco2 -> submit [label = "Synchronous"];
+  submit -> Return [label = "Wait"];
+  proco2 -> submita [label = "Asynchronous", style = dashed];
+  submita -> future -> future_get;
+  future_get -> Return [label = "Wait"];
+
+  subgraph cluster_ops {
+    graph [style = invis];
+    submit;
+    submita;
+    subgraph cluster_x {
+      exit [label = "Proco#exit"];
+      kill [label = "Proco#kill"];
+    }
+  }
+  proco2 -> exit;
+  exit -> proco1 [label = "Wait"];
+  proco2 -> kill -> proco1;
+
+  subgraph cluster_end {
+    graph  [style = invis];
+    Return [shape = oval];
+  }
+}
+

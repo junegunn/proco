@@ -5,14 +5,13 @@
   threads = (ENV['T'] || 5).to_i
 %>
 digraph G {
-  // Comic Sans FTW!
-  graph [fontname = "Comic Sans"];
-  node  [fontname = "Comic Sans"];
-  edge  [fontname = "Comic Sans"];
+  graph [fontname = "Gill Sans", fontsize = 12];
+  node  [fontname = "Gill Sans", fontsize = 12];
+  edge  [fontname = "Gill Sans", fontsize = 12];
 
   rankdir = LR;
-  ranksep = 1;
   ranksep = 0.5;
+  // splines = ortho;
 
 <% clients.times do |i| %>
   C<%= i %> [shape = ellipse, label = "Client"];
@@ -20,13 +19,13 @@ digraph G {
 <% end %>
 
   subgraph cluster_proco {
-    G [label = "Proco", shape = circle];
+    G [label = "Proco", shape = rect];
 
     subgraph cluster_queues {
       label = "Buffer";
     <% queues.times do |i| %>
       Q<%= i %> [shape = record, height = 0.01, label = "{<h> | | | | |<t> }"];
-      D<%= i %> [label = "Dispatcher"];
+      D<%= i %> [shape = box3d, label = "Dispatcher"];
       Q<%= i %> -> D<%= i %>;
     <% end %>
     }
