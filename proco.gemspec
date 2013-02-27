@@ -8,11 +8,11 @@ Gem::Specification.new do |gem|
   gem.version       = Proco::VERSION
   gem.authors       = ["Junegunn Choi"]
   gem.email         = ["junegunn.c@gmail.com"]
-  gem.description   = %q{TODO: Write a gem description}
-  gem.summary       = %q{TODO: Write a gem summary}
+  gem.description   = %q{A lightweight asynchronous task executor service designed for efficient batch processing}
+  gem.summary       = %q{A lightweight asynchronous task executor service designed for efficient batch processing}
   gem.homepage      = "https://github.com/junegunn/proco"
 
-  gem.files         = `git ls-files`.split($/)
+  gem.files         = `git ls-files`.split($/).reject { |f| f =~ %r[^viz/] }
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
   gem.require_paths = ["lib"]
