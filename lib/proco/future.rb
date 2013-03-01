@@ -2,68 +2,38 @@ class Proco
 class Future
   include Proco::MT::Base
 
-  # NOTE unordered
-  class GroupReturn < Exception
-    attr_reader :returns
-
-    def initialize returns
-      @returns = returns
-    end
-
-    def to_s
-      "exception thrown"
-    end
-
-    def to_h
-      @returns
-    end
-  end
-
   def get
-    do_when(proc { @done == @count }) do
-      if @fail
-        if @count == 1
-          raise @returns.values.first
-        else
-          raise GroupReturn.new(@returns)
-        end
+    do_when(proc { @status != :wait }) do
+      if @status == :ok
+        return @return
       else
-        if @count == 1
-          @returns.values.first
-        else
-          @returns
-        end
+        raise @return
       end
     end
   end
 
   def inspect
-    "Future=#{@status.inspect}"
+    "Future=#{@status}"
   end
 
   # @private
-  def initialize count
+  def initialize
     super()
-    @count   = count
-    @done    = 0
-    @fail    = false
-    @returns = {}
+    @status = :wait
+    @return = nil
   end
 
   # @private
-  def update items
-    ret =
-      begin
-        yield
-      rescue Exception => e
-        @fail = true # no sync required
-        e
-      end
-
-    broadcast do
-      @returns[items] = ret
-      @done += 1
+  def update
+    begin
+      @return = yield
+      @status = :ok
+    rescue Exception => e
+      @return = e
+      @status = :fail
     end
+
+    broadcast
   end
 end
 end

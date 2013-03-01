@@ -4,14 +4,14 @@ class Proco
 module Queue
 # @private
 class SingleQueue < Proco::Queue::Base
-  def initialize size = nil
+  def initialize size
     super
   end
 
-  def push_impl items
-    future = Future.new(items.length)
-    tuples = items.map { |item| [future, item] }
-    @items.concat tuples
+  def push_impl item
+    future = Future.new
+    tuples = [future, item]
+    @items << tuples
     future
   end
 

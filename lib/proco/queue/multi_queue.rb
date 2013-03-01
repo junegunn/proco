@@ -4,13 +4,13 @@ class Proco
 module Queue
 # @private
 class MultiQueue < Proco::Queue::Base
-  def initialize size = nil
+  def initialize size
     super
-    @future = Future.new(1)
+    @future = Future.new
   end
 
-  def push_impl items
-    @items.concat items
+  def push_impl item
+    @items << item
     @future
   end
 
@@ -20,7 +20,7 @@ class MultiQueue < Proco::Queue::Base
 
     # Reset vars
     @items  = []
-    @future = Future.new(1)
+    @future = Future.new
 
     ret
   end

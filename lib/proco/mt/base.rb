@@ -4,8 +4,7 @@ module MT
 module Base
   def initialize
     @mtx = Mutex.new
-    @cv = ConditionVariable.new
-    @running = nil
+    @cv  = ConditionVariable.new
   end
 
   def try_when cond, &block
@@ -20,18 +19,16 @@ module Base
   end
 
   def do_when cond, &block
-    @mtx.synchronize do
-      begin
-        while !cond.call
-          @cv.wait @mtx
-        end
-        block.call
-      ensure
-        # A good discussion on the use of broadcast instead of signal
-        # http://stackoverflow.com/questions/37026/java-notify-vs-notifyall-all-over-again
-        @cv.broadcast
-      end
+    @mtx.lock
+    while !cond.call
+      @cv.wait @mtx
     end
+    block.call
+  ensure
+    # A good discussion on the use of broadcast instead of signal
+    # http://stackoverflow.com/questions/37026/java-notify-vs-notifyall-all-over-again
+    @cv.broadcast
+    @mtx.unlock
   end
 
   def synchronize
