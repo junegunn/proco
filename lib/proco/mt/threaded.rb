@@ -2,7 +2,9 @@ class Proco
 module MT
 # @private
 module Threaded
+  include Proco::Logger
   include Proco::MT::Base
+
   def initialize
     super
     @running = false
@@ -26,13 +28,21 @@ module Threaded
 
   def spawn &block
     @thread = Thread.new do
+      debug "#{Thread.current} started (#{self})"
       broadcast do
         @running = true
       end
 
-      block.call
+      begin
+        block.call
+      rescue Exception => e
+        p e
+        error "[#{Thread.current}] #{e}"
+        raise
+      ensure
+        debug "#{Thread.current} exited (#{self})"
+      end
     end
-
     wait_until { running? }
 
     @thread

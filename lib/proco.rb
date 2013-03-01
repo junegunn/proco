@@ -1,16 +1,41 @@
+if (RUBY_VERSION.split('.')[0, 2].map(&:to_i) <=> [1, 9]) == -1
+  raise LoadError, "Ruby 1.9 or higher required"
+end
+
 require 'proco/version'
+require 'proco/logger'
 require 'proco/mt/base'
 require 'proco/mt/threaded'
 require 'proco/mt/worker'
 require 'proco/mt/pool'
 require 'proco/dispatcher'
 require 'proco/future'
-require 'proco/queue'
+require 'proco/queue/base'
+require 'proco/queue/single_queue'
+require 'proco/queue/multi_queue'
 require 'option_initializer'
 
+class Array
+  def sample
+    self[Kernel.rand(size)]
+  end unless method_defined? :sample
+end
+
 class Proco
+  include Proco::Logger
   include OptionInitializer
-  option_initializer :interval, :threads, :tries, :queues, :queue_size, :batch
+
+  option_initializer :interval, :threads, :tries, :queues, :queue_size, :batch, :logger
+  option_validator do |opt, val|
+    case opt
+    when :interval
+      raise ArgumentError, "interval must be a number" unless val.is_a?(Numeric)
+    when :threads, :tries, :queues, :queue_size
+      raise ArgumentError, "#{opt} must be a positive non-zero integer" unless val.is_a?(Fixnum) && val > 0
+    when :batch
+      raise ArgumentError, "batch must be a boolean value" unless [true, false].include?(val)
+    end
+  end
 
   attr_reader :options
 
@@ -24,7 +49,10 @@ class Proco
   }
 
   def initialize options = {}, &processor
+    validate_options options
     @options = DEFAULT_OPTIONS.merge(options)
+    @logger = @options[:logger]
+
     @pool = nil
     @running = false
   end
@@ -33,7 +61,7 @@ class Proco
   def start &block
     raise ArgumentError, "Block not given" if block.nil?
     @running = true
-    @pool = Proco::MT::Pool.new(options[:threads])
+    @pool = Proco::MT::Pool.new(options[:threads], @logger)
     @dispatchers = options[:queues].times.map { |i|
       Dispatcher.new(self, @pool, block)
     }
@@ -42,6 +70,7 @@ class Proco
   end
 
   # Synchronous submission
+  # @param [*Object] items
   # @return [Hash]
   def submit *items
     check_running
@@ -80,27 +109,6 @@ class Proco
   end
 
 private
-  def check_options
-    interval, threads, tries, qs =
-      @options.values_at :interval, :threads, :tries, :queue_size
-
-    if !interval.is_a?(Numeric) || interval < 0
-      raise ArgumentError, "Invalid interval"
-    end
-
-    if !threads.is_a?(Fixnum) || threads <= 0
-      raise ArgumentError, "Invalid threads"
-    end
-
-    if !tries.is_a?(Fixnum) || tries <= 0
-      raise ArgumentError, "Invalid threads"
-    end
-
-    if !qs.is_a?(Fixnum) || qs <= 0
-      raise ArgumentError, "Invalid queue_size"
-    end
-  end
-
   def check_running
     raise RuntimeError, "Not running" unless running?
   end

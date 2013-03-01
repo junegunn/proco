@@ -8,6 +8,17 @@ module Base
     @running = nil
   end
 
+  def try_when cond, &block
+    return unless @mtx.try_lock
+
+    begin
+      block.call if cond.call
+    ensure
+      @cv.broadcast
+      @mtx.unlock
+    end
+  end
+
   def do_when cond, &block
     @mtx.synchronize do
       begin
@@ -20,6 +31,12 @@ module Base
         # http://stackoverflow.com/questions/37026/java-notify-vs-notifyall-all-over-again
         @cv.broadcast
       end
+    end
+  end
+
+  def synchronize
+    @mtx.synchronize do
+      yield
     end
   end
 

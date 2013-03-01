@@ -1,3 +1,5 @@
+require 'lps'
+
 class Proco
 # @private
 class Dispatcher
@@ -6,24 +8,24 @@ class Dispatcher
   def initialize proco, thread_pool, block
     super()
 
-    @tries, interval, qs =
-      proco.options.values_at :tries, :interval, :queue_size
-    @queue = Proco::Queue.new(qs)
+    @tries, @logger, interval, qs, @batch =
+      proco.options.values_at :tries, :logger, :interval, :queue_size, :batch
+    @queue = (@batch ? Proco::Queue::MultiQueue : Proco::Queue::SingleQueue).new(qs)
     @pool  = thread_pool
     @block = block
 
     spawn do
       future = items = nil
       LPS.interval(interval).while {
-        future, items = @queue.take_all
-        future
+        future, items = @queue.take
+        future # JRuby bug
       }.loop do
         inner_loop future, items
       end
     end
   end
 
-  def push(*items)
+  def push *items
     @queue.push(*items)
   end
 
@@ -34,15 +36,16 @@ class Dispatcher
 
 private
   def inner_loop future, items
-    @pool.assign do
-      future.send(:update) do
+    @pool.assign2 do
+      future.update(items) do
         ret = nil
         @tries.times do |i|
           begin
             ret = @block.call items
             break
-          rescue Exception
+          rescue Exception => e
             next if (i + 1) < @tries
+            error e.to_s # TODO
             raise
           end
         end

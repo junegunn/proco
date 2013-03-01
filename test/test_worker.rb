@@ -5,7 +5,7 @@ require 'proco'
 
 class TestWorker < MiniTest::Unit::TestCase
   def test_worker
-    w = Proco::MT::Worker.new
+    w = Proco::MT::Worker.new nil
     cnt = 0
     w.assign { sleep 0.1; cnt += 1 }
     w.assign { sleep 0.1; cnt += 1 }

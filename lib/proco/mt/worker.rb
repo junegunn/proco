@@ -6,15 +6,16 @@ class Worker
 
   attr_reader :counter
 
-  def initialize
-    super
+  def initialize logger
+    super()
 
+    @logger = logger
     @block = nil
     @counter = 0
 
     spawn do
       while running?
-        do_when(proc { break unless running?; @block }) do
+        do_when(Proc.new { break unless running?; @block }) do
           @block.call
           @counter += 1
           @block = nil
@@ -25,7 +26,14 @@ class Worker
 
   # Blocks when working
   def assign &block
-    do_when(proc { return unless running?; @block.nil? }) do
+    do_when(Proc.new { return unless running?; @block.nil? }) do
+      @block = block
+    end
+  end
+
+  # Returns nil when working
+  def try_assign &block
+    try_when(Proc.new { return unless running?; @block.nil? }) do
       @block = block
     end
   end

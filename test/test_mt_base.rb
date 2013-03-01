@@ -19,7 +19,8 @@ class MTBaseSub
   end
 
   def not_ok
-    do_when(proc { return :return }) do
+    # Proc.new instead of proc (1.8 compat)
+    do_when(Proc.new { return :return }) do
       :anything
     end
   end
