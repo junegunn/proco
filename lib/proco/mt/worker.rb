@@ -14,14 +14,23 @@ class Worker
     @counter = 0
 
     spawn do
-      while running?
-        do_when(Proc.new { break unless running?; @block }) do
-          @block.call
-          @counter += 1
-          @block = nil
-        end
-      end
+      work while running?
     end
+  end
+
+  def work
+    @mtx.lock
+    while true
+      return unless running?
+      break if @block
+      @cv.wait @mtx
+    end
+    @block.call
+    @counter += 1
+    @block = nil
+  ensure
+    @cv.broadcast
+    @mtx.unlock
   end
 
   # Blocks when working

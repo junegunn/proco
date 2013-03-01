@@ -47,10 +47,23 @@ Benchmark.bm(40) do |x|
     end
   end
 
+  x.report('Default Proco') do
+    proco = Proco.new
+    proco.start do |item|
+      nil
+    end
+
+    times.times do |i|
+      print '.' if i % 1000 == 0
+      proco.submit! i
+    end
+    proco.exit
+  end
+
   [1, 4, 16].each do |queues|
     [1, 2, 4].each do |threads|
       x.report("q: #{queues}, t: #{threads}") do
-        proco = Proco.queues(queues).logger(logger).new
+        proco = Proco.queues(queues).logger(logger).threads(8).new
         proco.start do |items|
           nil
         end

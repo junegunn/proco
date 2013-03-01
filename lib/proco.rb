@@ -70,20 +70,20 @@ class Proco
   end
 
   # Synchronous submission
-  # @param [*Object] items
+  # @param [Object] items
   # @return [Hash]
-  def submit *items
+  def submit item
     check_running
-    submit!(*items).get
+    submit!(item).get
   end
 
   # Asynchronous submission
-  # @param [*Object] items
+  # @param [Object] items
   # @return [Proco::Future]
-  def submit! *items
+  def submit! item
     check_running
     # TODO: sample in 1.8
-    @dispatchers.sample.push(*items)
+    @dispatchers.sample.push(item)
   end
 
   # Stops Proco, returns results from remaining submissions in the queue.

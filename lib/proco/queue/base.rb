@@ -44,6 +44,7 @@ class Base
       empty = @items.empty?
       return nil if empty && !@valid
       break if !empty
+      @cv.wait @mtx
     end
     take_impl
   ensure
