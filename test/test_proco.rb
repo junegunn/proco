@@ -1,4 +1,5 @@
 $VERBOSE = true
+$LOAD_PATH.unshift File.expand_path('../../lib', __FILE__) if $0 == __FILE__
 require 'rubygems'
 require 'minitest/autorun'
 require 'proco'
@@ -38,9 +39,7 @@ describe Proco do
       end
 
       @proco.submit! 1
-      @proco.submit! 2, 3
-      @proco.submit 4
-      @proco.submit 5, 6
+      @proco.submit 2
 
       @proco.exit
     end
