@@ -8,8 +8,8 @@ class Dispatcher
   def initialize proco, thread_pool, block
     super()
 
-    @tries, @logger, interval, qs, @batch =
-      proco.options.values_at :tries, :logger, :interval, :queue_size, :batch
+    @logger, interval, qs, @batch =
+      proco.options.values_at :logger, :interval, :queue_size, :batch
     @queue = (@batch ? Proco::Queue::MultiQueue : Proco::Queue::SingleQueue).new(qs)
     @pool  = thread_pool
     @block = block
@@ -38,18 +38,12 @@ private
   def inner_loop future, items
     @pool.assign do
       future.update do
-        ret = nil
-        @tries.times do |i|
-          begin
-            ret = @block.call items
-            break
-          rescue Exception => e
-            next if (i + 1) < @tries
-            error e.to_s # TODO
-            raise
-          end
+        begin
+          @block.call items
+        rescue Exception => e
+          error e.to_s # TODO
+          raise
         end
-        ret
       end
     end
 

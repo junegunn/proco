@@ -73,12 +73,6 @@ Proco implements a pool of concurrently running executor threads.
 If you're running CRuby, multi-threading only makes sense if your task involves blocking I/O operations.
 On JRuby or Rubinius, executor threads will run in parallel and efficiently utilize multiple cores.
 
-Is it any good?
----------------
-
-Yes.
-
-
 Installation
 ------------
 
@@ -147,7 +141,6 @@ require 'proco'
 
 proco = Proco.interval(0.1).     # Runs every 0.1 second
               threads(4).        # 4 threads processing items every interval
-              tries(2).          # Retry on processing error
               queue_size(1000)   # Each thread has a queue of size 1000
 
 proco.start do |items|

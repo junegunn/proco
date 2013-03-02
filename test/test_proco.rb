@@ -55,7 +55,6 @@ describe Proco do
         feed << i
         @proco.submit! i
       end
-
       @proco.exit
 
       assert_equal feed, processed
@@ -157,38 +156,6 @@ class TestProco # < MiniTest::Unit::TestCase
 #   proco.exit
 #   assert_equal false, proco.running?
 # end
-
-  def test_tries
-    {
-      1 => 0,
-      2 => 0,
-      3 => 1000,
-      4 => 1000
-    }.each do |t, exp|
-      proco = Proco.tries(t).queue_size(900).new
-      tries = {}
-      cnt = 0
-      proco.start do |items|
-        tries[items] ||= 0
-        tries[items] += 1
-
-        if tries[items] < 3
-          raise RuntimeError
-        else
-          cnt += items.length
-          true
-        end
-      end
-
-      1000.times do |i|
-        proco.submit! i
-      end
-
-      proco.exit
-
-      assert_equal exp, cnt
-    end
-  end
 
   def test_kill
     proco = Proco.new
