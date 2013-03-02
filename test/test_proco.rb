@@ -66,6 +66,7 @@ describe Proco do
   describe "in batch-mode with multiple queues" do
     before do
       @proco = Proco.queue_size(10).queues(2).threads(4).batch(true).logger(@logger).new
+      @mutex = Mutex.new
     end
 
     it "always yields Array" do
@@ -83,7 +84,9 @@ describe Proco do
     it "handles synchronous requests" do
       cnt = 0
       @proco.start do |items|
-        cnt += items.inject(:+)
+        @mutex.synchronize do
+          cnt += items.inject(:+)
+        end
       end
       1000.times { |i| @proco.submit i }
       assert_equal 1000.times.inject(:+), cnt
@@ -94,7 +97,9 @@ describe Proco do
     it "handles asynchronous requests" do
       cnt = 0
       @proco.start do |items|
-        cnt += items.inject(:+)
+        @mutex.synchronize do
+          cnt += items.inject(:+)
+        end
       end
       1000.times { |i| @proco.submit! i }
       @proco.exit

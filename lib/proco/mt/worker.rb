@@ -22,8 +22,8 @@ class Worker
     # Not using do_when makes the code around the task block about 10% faster
     @mtx.lock
     while true
-      return unless running?
       break if @block
+      return unless running?
       @cv.wait @mtx
     end
     block = @block
@@ -46,8 +46,8 @@ class Worker
     #end
     @mtx.lock
     while true
-      return unless running?
       break unless @block
+      return unless running?
       @cv.wait @mtx
     end
     @block = block

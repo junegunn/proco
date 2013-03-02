@@ -42,8 +42,8 @@ class Base
     @mtx.lock
     while true
       empty = @items.empty?
-      return nil if empty && !@valid
-      break if !empty
+      break unless empty
+      return nil unless @valid
       @cv.wait @mtx
     end
     take_impl
