@@ -8,64 +8,88 @@ require 'parallelize'
 require 'logger'
 
 logger = Logger.new($stdout)
-range  = (1..1000)
-times  = 5000
-batch  = 100
-task   = lambda do
-  range.inject(:*)
-end
 
-Benchmark.bm(40) do |x|
-  x.report('loop') do
-    times.times do
-      task.call
+2.times do |i|
+  if i == 0
+    times = 5000
+    # CPU Intensive task
+    task = lambda do |item|
+      (1..10000).inject(:+)
     end
-  end
 
-  x.report('default proco') do
-    proco = Proco.new
-    proco.start do
-      task.call
+    btask = lambda do |items|
+      items.each do
+        (1..10000).inject(:+)
+      end
     end
-    times.times do |i|
-      proco.submit! i
-    end
-    proco.exit
-  end
+  else
+    mtx = Mutex.new
 
-  [2, 4, 8].each do |threads|
-    x.report("parallelize (#{threads})") do
-      parallelize(threads) do
-        (times / threads).times do
-          task.call
-        end
+    times = 500
+    task = lambda do |item|
+      mtx.synchronize do
+        sleep 0.01 + 0.001
       end
     end
 
-    [1, 4].each do |queues|
-      x.report("proco with #{threads} threads / #{queues} queues") do
-        proco = Proco.queues(queues).threads(threads).new
-        proco.start do
-          task.call
-        end
-        times.times do |i|
-          proco.submit! i
-        end
-        proco.exit
+    btask = lambda do |items|
+      mtx.synchronize do
+        sleep 0.01 + 0.001 * items.length
       end
+    end
+  end
 
-      x.report("batch proco with #{threads} threads / #{queues} queues") do
-        proco = Proco.queues(queues).threads(threads).batch(true).new
-        proco.start do |items|
-          items.length.times do
-            task.call
+  Benchmark.bm(45) do |x|
+    x.report("loop") do
+      times.times do |i|
+        task.call i
+      end
+    end
+
+    x.report('Proco.new') do
+      proco = Proco.new
+      proco.start do |i|
+        task.call i
+      end
+      times.times do |i|
+        proco.submit! i
+      end
+      proco.exit
+    end
+
+    [2, 4, 8].each do |threads|
+      x.report("parallelize(#{threads})") do
+        parallelize(threads) do
+          (times / threads).times do |i|
+            task.call i
           end
         end
-        times.times do |i|
-          proco.submit! i
+      end
+
+      [1, 4].each do |queues|
+        x.report("Proco.threads(#{threads}).queues(#{queues}).new") do
+          proco = Proco.queues(queues).threads(threads).new
+          proco.start do |i|
+            task.call i
+          end
+          times.times do |i|
+            proco.submit! i
+          end
+          proco.exit
         end
-        proco.exit
+
+        x.report("Proco.threads(#{threads}).queues(#{queues}).batch(true).new") do
+          proco = Proco.queues(queues).threads(threads).batch(true).new
+          proco.start do |items|
+            btask.call items
+          end
+          times.times do |i|
+            proco.submit! i
+          end
+          proco.exit
+        end
       end
     end
   end
+
 end

@@ -191,6 +191,68 @@ proco.exit
 # proco.kill
 ```
 
+Benchmarks
+----------
+
+Let's see how well Proco performs on different scenarios.
+Simple benchmark scripts can be found in the `benchmark` directory.
+The following benchmark results were gathered on JRuby 1.7.3.
+
+### Modeling CPU-intensive task
+
+- The task does not involve any blocking I/O
+- A fixed amount of CPU time is required for each item
+- There's little benefit of batch processing as the total amount of work is just the same
+
+#### Task definition
+
+```ruby
+task = lambda do |item|
+  (1..10000).inject(:+)
+end
+
+batch_task = lambda do |items|
+  # Total amount of work is just the same
+  items.each do
+    (1..10000).inject(:+)
+  end
+end
+```
+
+#### Result (on dual core)
+
+### Modeling direct I/O on a single disk
+
+- We're bypassing write buffer of the Kernel
+- Time required to write data on disk is dominated by the seek time of the disk
+- Let's assume seek time of our disk is 10ms, and data transfer rate, 50MB/sec
+- Each request writes 50kB amount of data
+- As we have only one disk, writes cannot occur concurrently
+
+#### Task definition
+
+```ruby
+# Mutex for simulating exclusive disk access
+mtx = Mutex.new
+
+task = lambda do |item|
+  mtx.synchronize do
+    # Seek time: 0.01 sec
+    # Transfer time: 50kB / 50MB/sec = 0.001 sec
+    sleep 0.01 + 0.001
+  end
+end
+
+batch_task = lambda do |items|
+  mtx.synchronize do
+    # Seek time: 0.01 sec
+    # Transfer time: n * (50kB / 50MB/sec) = n * 0.001 sec
+    sleep 0.01 + items.length * 0.001
+  end
+end
+```
+
+#### Result (on dual core)
 
 Contributing
 ------------
