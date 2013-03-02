@@ -11,13 +11,27 @@ require 'logger'
 logger = Logger.new($stdout)
 times = 1_000_000
 
+if celluloid = false
+  require 'celluloid'
+  class Cell
+    include Celluloid
+
+    def push
+      Proco::Future.new
+    end
+  end
+end
+
 Benchmark.bm(40) do |x|
-# x.report('threads') do
-#   times.times.each_slice(64) do |slice|
-#     ts = slice.map { Thread.new { } }
-#     ts.each(&:join)
-#   end
-# end
+  x.report('celluloid') do
+    c = Cell.new
+    f = nil
+    times.times do |i|
+      print '.' if i % 1000 == 0
+      f = c.future.push
+    end
+    f.value
+  end if celluloid
 
   x.report('simple loop') do
     times.times do |i|
