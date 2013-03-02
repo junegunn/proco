@@ -28,9 +28,9 @@ Benchmark.bm(40) do |x|
     f = nil
     times.times do |i|
       print '.' if i % 1000 == 0
-      f = c.future.push
+      c.push!
     end
-    f.value
+    c.future.push.value
   end if celluloid
 
   x.report('simple loop') do
