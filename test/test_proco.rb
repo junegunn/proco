@@ -105,62 +105,56 @@ describe Proco do
       assert_equal 1000.times.inject(:+), cnt
     end
   end
-end
 
-class TestProco # < MiniTest::Unit::TestCase
+  it "goes like this in batch mode" do
+    proco = Proco.interval(0.1).threads(4).queues(8).queue_size(10).batch(true).new
 
-# def test_proco_lifecycle
-#   proco = Proco.interval(0.1).threads(4).queues(8).queue_size(10).new
+    assert_equal false, proco.running?
 
-#   assert_equal false, proco.running?
+    # No you can't submit an item yet
+    assert_raises(RuntimeError) { proco.submit :not_yet }
+    assert_raises(RuntimeError) { proco.exit }
+    assert_raises(RuntimeError) { proco.kill }
 
-#   # No you can't submit an item yet
-#   assert_raises(RuntimeError) { proco.submit :not_yet }
-#   assert_raises(RuntimeError) { proco.exit }
-#   assert_raises(RuntimeError) { proco.kill }
+    assert_raises(ArgumentError) {
+      proco.start
+    }
 
-#   assert_raises(ArgumentError) {
-#     proco.start
-#   }
+    proco.start do |batch|
+      # Batch-process items every 0.1 seconds
+      # ...
+      # puts "#{Thread.current}: #{batch}"
+      batch.length
+    end
 
-#   proco.start do |batch|
-#     # Batch-process items every 0.1 seconds
-#     # ...
-#     puts "#{Thread.current}: #{batch}"
-#     batch.length
-#   end
+    assert_equal true, proco.running?
 
-#   assert_equal true, proco.running?
+    # Synchronous submit
+    50.times do |i|
+      result = proco.submit i
+      assert_instance_of Fixnum, result
+    end
 
-#   # Synchronous submit
-#   50.times do |i|
-#     result = proco.submit i
-#     assert_instance_of Hash, result
+    # Asynchronous submit
+    futures = 50.times.map { |i|
+      proco.submit! i
+    }
+    futures.each do |future|
+      assert_instance_of Proco::Future, future
+    end
 
-#     assert result.has_key? :elapsed
-#     assert result[:success]
-#     assert_instance_of Fixnum, result[:return]
-#   end
+    # Wait until the batch containing the item is processed
+    assert_equal 50, futures.uniq.map { |f| f.get }.inject(:+)
 
-#   # Asynchronous submit
-#   futures = 50.times.map { |i|
-#     proco.submit! i, i ** 2, i ** 3
-#   }
-#   futures.each do |future|
-#     assert_instance_of Proco::Future, future
-#   end
+    proco.exit
+    assert_equal false, proco.running?
+  end
 
-#   # Wait until the batch containing the item is processed (FIXME: deadlock)
-#   assert_equal 150, futures.uniq.map { |f| f.get[:return] }.inject(:+)
-
-#   proco.exit
-#   assert_equal false, proco.running?
-# end
-
-  def test_kill
-    proco = Proco.new
+  it "can be killed without waiting" do
+    proco = Proco.batch(true).new
     cnt = 0
     proco.start do |items|
+      sleep 1
       cnt += items.length
     end
     100.times do |i|
@@ -171,7 +165,7 @@ class TestProco # < MiniTest::Unit::TestCase
 
     cnt = 0
     proco.start do |items|
-      sleep 5
+      sleep 1
       cnt += items.length
     end
     100.times do |i|
@@ -181,3 +175,4 @@ class TestProco # < MiniTest::Unit::TestCase
     assert_equal 0, cnt
   end
 end
+
