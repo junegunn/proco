@@ -1,7 +1,3 @@
-if (RUBY_VERSION.split('.')[0, 2].map(&:to_i) <=> [1, 9]) == -1
-  raise LoadError, "Ruby 1.9 or higher required"
-end
-
 require 'proco/version'
 require 'proco/logger'
 require 'proco/mt/base'
@@ -82,7 +78,6 @@ class Proco
   # @return [Proco::Future]
   def submit! item
     check_running
-    # TODO: sample in 1.8
     @dispatchers.sample.push(item)
   end
 

@@ -54,17 +54,6 @@ Benchmark.bm(40) do |x|
         proco.exit
       end
 
-      x.report("proco with #{threads} threads / #{queues} queues / batch submit") do
-        proco = Proco.queues(queues).threads(threads).new
-        proco.start do
-          task.call
-        end
-        times.times.each_slice(100) do |is|
-          proco.submit! *is
-        end
-        proco.exit
-      end
-
       x.report("batch proco with #{threads} threads / #{queues} queues") do
         proco = Proco.queues(queues).threads(threads).batch(true).new
         proco.start do |items|

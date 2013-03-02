@@ -36,7 +36,6 @@ module Threaded
       begin
         block.call
       rescue Exception => e
-        p e
         error "[#{Thread.current}] #{e}"
         raise
       ensure

@@ -7,7 +7,7 @@ especially designed for efficient batch processing of multiple data items.
 Requirements
 ------------
 
-Proco requires Ruby 1.9 or higher.
+Proco requires Ruby 1.8 or higher.
 
 Architecture
 ------------

@@ -10,8 +10,7 @@ class SingleQueue < Proco::Queue::Base
 
   def push_impl item
     future = Future.new
-    tuples = [future, item]
-    @items << tuples
+    @items << [future, item]
     future
   end
 

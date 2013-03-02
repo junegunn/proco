@@ -3,8 +3,8 @@ class Future
   include Proco::MT::Base
 
   def get
-    do_when(proc { @status != :wait }) do
-      if @status == :ok
+    do_when(proc { @state != :wait }) do
+      if @state == :ok
         return @return
       else
         raise @return
@@ -13,13 +13,13 @@ class Future
   end
 
   def inspect
-    "Future=#{@status}"
+    "Future=#{@state}"
   end
 
   # @private
   def initialize
     super()
-    @status = :wait
+    @state = :wait
     @return = nil
   end
 
@@ -27,10 +27,10 @@ class Future
   def update
     begin
       @return = yield
-      @status = :ok
+      @state = :ok
     rescue Exception => e
       @return = e
-      @status = :fail
+      @state = :fail
     end
 
     broadcast

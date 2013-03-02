@@ -12,18 +12,55 @@ logger = Logger.new($stdout)
 times = 1_000_000
 
 Benchmark.bm(40) do |x|
+# x.report('threads') do
+#   times.times.each_slice(64) do |slice|
+#     ts = slice.map { Thread.new { } }
+#     ts.each(&:join)
+#   end
+# end
+
   x.report('simple loop') do
     times.times do |i|
       Proco::Future.new
     end
   end
 
-  x.report('Queue push and pop') do
-    q = Queue.new
+  x.report('Default Proco') do
+    proco = Proco.new
+    proco.start do |item|
+      nil
+    end
+
+    times.times do |i|
+      print '.' if i % 1000 == 0
+      proco.submit! i
+    end
+    proco.exit
+  end
+
+  x.report('SizedQueue push and pop') do
+    q = SizedQueue.new 1000
     times.times do |i|
       q.push Proco::Future.new
       q.pop
     end
+  end
+
+  x.report('SizedQueue push and pop (threads)') do
+    q = SizedQueue.new 1000
+    t1 = Thread.new do
+      times.times do |i|
+        q.push Proco::Future.new
+      end
+      q.push nil
+    end
+    t2 = Thread.new do
+      while q.pop
+      end
+    end
+
+    t1.join
+    t2.join
   end
 
   x.report('Mutex synchronization') do
@@ -40,24 +77,32 @@ Benchmark.bm(40) do |x|
   end
 
   x.report('Proco queue') do
-    q = Proco::Queue::SingleQueue.new 100
+    q = Proco::Queue::SingleQueue.new 1000
     times.times do |i|
       q.push i
       q.take
     end
   end
 
-  x.report('Default Proco') do
-    proco = Proco.new
-    proco.start do |item|
-      nil
+  x.report('Proco queue (thread)') do
+    q = Proco::Queue::SingleQueue.new 1000
+    t1 = Thread.new do
+      times.times do |i|
+        print '.' if i % 1000 == 0
+        q.push i
+      end
+      q.invalidate
     end
 
-    times.times do |i|
-      print '.' if i % 1000 == 0
-      proco.submit! i
+    t2 = Thread.new do
+      while true
+        f, i = q.take
+        break unless f
+      end
     end
-    proco.exit
+
+    t1.join
+    t2.join
   end
 
   [1, 4, 16].each do |queues|

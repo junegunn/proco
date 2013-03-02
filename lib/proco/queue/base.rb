@@ -51,25 +51,6 @@ class Base
     @cv.broadcast
     @mtx.unlock
   end
-
-# def push *items
-#   do_when(Proc.new {
-#     raise Invalidated unless @valid
-#     !@size || (@items.length + items.length) <= @size
-#   }) do
-#     push_impl items
-#   end
-# end
-
-# def take
-#   do_when(Proc.new {
-#     empty = @items.empty?
-#     return nil if empty && !@valid
-#     !empty
-#   }) do
-#     take_impl
-#   end
-# end
 end#Base
 end#Queue
 end

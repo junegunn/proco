@@ -10,22 +10,29 @@ class Pool
       Worker.new @logger
     }
     @num_workers = @workers.length
+    if @num_workers > 1
+      self.instance_eval do
+        alias assign assign_try
+      end
+    else
+      self.instance_eval do
+        alias assign assign_wait
+      end
+    end
   end
 
-  def assign &block
+  def assign_wait &block
     # Optimistic randomized assignment to avoid mutex contention
     @workers.sample.assign(&block)
   end
 
-  def assign2 &block
-    if @num_workers > 1
-      @num_workers.times do |i|
-        ret = @workers.sample.try_assign(&block)
-        return ret if ret
-      end
-      # phew. blocking assignment
-      # debug "Failed immediate thread allocation in the 1st round (#@num_workers)"
+  def assign_try &block
+    @num_workers.times do |i|
+      ret = @workers.sample.try_assign(&block)
+      return ret if ret
     end
+    # phew. blocking assignment
+    # debug "Failed immediate thread allocation in the 1st round (#@num_workers)"
     assign(&block)
   end
 

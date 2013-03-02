@@ -36,7 +36,7 @@ class Dispatcher
 
 private
   def inner_loop future, items
-    @pool.assign2 do
+    @pool.assign do
       future.update do
         ret = nil
         @tries.times do |i|

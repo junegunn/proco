@@ -11,7 +11,7 @@ class TestWorker < MiniTest::Unit::TestCase
     w.assign { sleep 0.1; cnt += 1 }
     w.assign { sleep 0.1; cnt += 1 }
     w.assign { sleep 0.1; cnt += 1 } # Async
-    assert_equal 2, cnt
+    assert_equal 1, cnt
     sleep 0.2;
     w.exit
     assert_equal 3, cnt
