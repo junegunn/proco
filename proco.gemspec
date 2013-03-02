@@ -18,7 +18,7 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
 
   gem.add_runtime_dependency 'lps', '~> 0.1.2'
-  gem.add_runtime_dependency 'option_initializer', '~> 1.1.3'
+  gem.add_runtime_dependency 'option_initializer', '~> 1.1.4'
   gem.add_development_dependency 'minitest'
   gem.add_development_dependency 'parallelize'
 end

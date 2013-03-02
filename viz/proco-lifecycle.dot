@@ -18,10 +18,10 @@ digraph G {
 
   new -> proco1 -> start -> proco2;
   proco2 -> submit [label = "Synchronous"];
-  submit -> Return [label = "Wait"];
+  submit -> "Return / Exception" [label = "Wait"];
   proco2 -> submita [label = "Asynchronous", style = dashed];
   submita -> future -> future_get;
-  future_get -> Return [label = "Wait"];
+  future_get -> "Return / Exception" [label = "Wait"];
 
   subgraph cluster_ops {
     graph [style = invis];
@@ -38,7 +38,7 @@ digraph G {
 
   subgraph cluster_end {
     graph  [style = invis];
-    Return [shape = oval];
+    "Return / Exception" [shape = oval];
   }
 }
 

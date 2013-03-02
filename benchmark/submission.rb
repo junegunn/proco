@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 $VERBOSE = true
+require 'rubygems'
 $LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
 require 'proco'
 require 'benchmark'

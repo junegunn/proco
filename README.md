@@ -7,14 +7,15 @@ especially designed for efficient batch processing of multiple data items.
 Requirements
 ------------
 
-Proco requires Ruby 1.8 or higher.
+Proco requires Ruby 1.8 or higher. Tested on MRI 1.8.7/1.9.3, and JRuby 1.7.3.
 
 Architecture
 ------------
 
 ![Basic producer-consumer configuration](https://github.com/junegunn/proco/raw/master/viz/producer-consumer.png)
 
-Proco implements the traditional [producer-consumer model](http://en.wikipedia.org/wiki/Producer-consumer_problem) (hence the name *Pro-Co*).
+Proco is based on the traditional [producer-consumer model](http://en.wikipedia.org/wiki/Producer-consumer_problem)
+(hence the name *ProCo*).
 
 - Mutliple clients simultaneously submits (*produces*) items to be processed.
   - A client can asynchronously submit an item and optionally wait for its completion.
@@ -30,31 +31,40 @@ Proco implements the traditional [producer-consumer model](http://en.wikipedia.o
 
 ![](https://github.com/junegunn/proco/raw/master/viz/proco-6-1-1.png)
 
+```ruby
+proco = Proco.new
+```
+
 ### Proco with multiple queues
 
 ![](https://github.com/junegunn/proco/raw/master/viz/proco-6-4-5.png)
 
+```ruby
+proco = Proco.threads(5).queues(4).new
+```
+
 Batch processing
 ----------------
 
-Sometimes it really helps to process multiple items in bulk instead of one at a time.
+Sometimes it really helps to process multiple items in batch instead of one at a time.
 
-Notable examples includes
+Notable examples includes:
 - buffered disk I/O in Kernel
 - consolidated e-mail notification
 - database batch updates
-- and group commit of database transactions.
+- group commit of database transactions
 
-In such scheme, we don't process a request as soon as it arrives,
+In this scheme, we don't process a request as soon as it arrives,
 but wait a little while hoping that we receive more requests as well,
 so we can process them together with minimal amortized latency.
 
 It's a pretty common pattern, that most developers will be writing similar scenarios
-one way or another at some point. So *why don't we make it reusable*?
+one way or another at some point. So *why don't we make the pattern reusable*?
 
-Proco was designed with this in mind.
-As described above, item assignments to executor threads can be done periodically at the specified interval,
-so that certain number of items are piled up between assignments and then assigned at once in batch.
+Proco was designed with this goal in mind.
+As described above, item assignments can be done periodically at the specified interval,
+so that multiple items are piled up in the queue between assignments,
+and then given to one of the executor threads at once in batch.
 
 ```ruby
 # Assigns items in batch every second
@@ -64,29 +74,14 @@ proco = Proco.interval(1).batch(true).new
 Thread pool
 -----------
 
-```ruby
-# Proco with 8 executor threads
-proco = Proco.threads(8).new
-```
-
 Proco implements a pool of concurrently running executor threads.
 If you're running CRuby, multi-threading only makes sense if your task involves blocking I/O operations.
 On JRuby or Rubinius, executor threads will run in parallel and efficiently utilize multiple cores.
 
-Installation
-------------
-
-Add this line to your application's Gemfile:
-
-    gem 'proco'
-
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
-
-    $ gem install proco
+```ruby
+# Proco with 8 executor threads
+proco = Proco.threads(8).new
+```
 
 Proco API
 ---------
@@ -112,7 +107,7 @@ A Proco object can be initialized by chaining the following
 # Initialization with method chaining
 proco = Proco.interval(0.1).threads(8).queues(4).queue_size(100).batch(true).new
 
-# Traditional initialization with options hash
+# Traditional initialization with options hash is also allowed
 proco = Proco.new(
           interval:   0.1,
           threads:    8,
@@ -123,18 +118,43 @@ proco = Proco.new(
 
 ### Starting
 
+```ruby
+# Regular Proco
+proco = Proco.new
+proco.start do |item|
+  # code for single item
+end
+
+# Proco in batch mode
+proco = Proco.batch(true).new
+proco.start do |items|
+  # code for multiple items
+end
+```
+
 ### Submitting items
+
+```ruby
+# Synchronous submission
+proco.submit 100
+
+# Asynchronous(1) submission
+future = proco.submit! 100
+value = future.get
+```
 
 ### Quitting
 
 ```ruby
+# Graceful shutdown
 proco.exit
 
+# Immediately kills all running threads
 proco.kill
 ```
 
-Basic usage
------------
+Examples
+--------
 
 ```ruby
 require 'proco'

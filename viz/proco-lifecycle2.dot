@@ -1,0 +1,23 @@
+digraph G {
+  graph [fontname = "Gill Sans", fontsize = 12];
+  node  [fontname = "Gill Sans", fontsize = 12, shape = rect];
+  edge  [fontname = "Gill Sans", fontsize = 12];
+
+  rankdir = TB;
+  nodesep = 0.3;
+  ranksep = 0.3;
+
+  new [shape = point];
+  new -> proco1 [label = "Proco.new"];
+  proco1 [label = "Proco (not started)", shape = oval, style = filled];
+  proco2 [label = "Proco (started)", shape = oval];
+  proco1 -> proco2 [label = "Proco#start"];
+  proco2 -> result [label = "Proco#submit"]
+  proco2 -> future [label = "Proco#submit!"]
+  future -> result [label = "Proco::Future#get"]
+  future [label = "Proco::Future", shape = oval];
+  proco2 -> proco1 [label = "Proco#exit"];
+  proco2 -> proco1 [label = "Proco#kill"];
+  result [label = "Return / Exception", shape = oval];
+}
+
