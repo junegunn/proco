@@ -33,7 +33,7 @@ class Pool
     end
     # phew. blocking assignment
     # debug "Failed immediate thread allocation in the 1st round (#@num_workers)"
-    assign(&block)
+    assign_wait(&block)
   end
 
   def exit
