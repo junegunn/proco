@@ -29,7 +29,7 @@ Proco is based on the traditional [producer-consumer model](http://en.wikipedia.
 
 ### Proco with a single queue and thread
 
-![](https://github.com/junegunn/proco/raw/master/viz/proco-6-1-1.png)
+![Default Proco configuration](https://github.com/junegunn/proco/raw/master/viz/proco-6-1-1.png)
 
 ```ruby
 proco = Proco.new
@@ -37,7 +37,7 @@ proco = Proco.new
 
 ### Proco with multiple queues
 
-![](https://github.com/junegunn/proco/raw/master/viz/proco-6-4-5.png)
+![Proco with multiple queues](https://github.com/junegunn/proco/raw/master/viz/proco-6-4-5.png)
 
 ```ruby
 proco = Proco.threads(5).queues(4).new
@@ -213,8 +213,8 @@ task = lambda do |item|
   (1..10000).inject(:+)
 end
 
+# Total amount of work is just the same
 batch_task = lambda do |items|
-  # Total amount of work is just the same
   items.each do
     (1..10000).inject(:+)
   end
@@ -228,7 +228,7 @@ TODO
 ### Modeling direct I/O on a single disk
 
 - We're bypassing write buffer of the Kernel
-- Time required to write data on disk is dominated by the seek time of the disk
+- Time required to write data on disk is dominated by the seek time
 - Let's assume seek time of our disk is 10ms, and data transfer rate, 50MB/sec
 - Each request writes 50kB amount of data
 - As we have only one disk, writes cannot occur concurrently
@@ -247,6 +247,7 @@ task = lambda do |item|
   end
 end
 
+# Let's say it makes sense to group multiple writes into a single I/O operation
 batch_task = lambda do |items|
   mtx.synchronize do
     # Seek time: 0.01 sec
