@@ -23,7 +23,7 @@ if celluloid = false
   end
 end
 
-Benchmark.bm(40) do |x|
+result = Benchmark.bm(40) do |x|
   x.report('celluloid') do
     c = Cell.new
     f = nil
@@ -139,3 +139,12 @@ Benchmark.bm(40) do |x|
     end
   end
 end
+
+data = Hash[ result.map { |r| [r.label, r.real] } ]
+mlen = data.keys.map(&:length).max
+mval = data.values.max
+width = 40
+data.each do |k, v|
+  puts k.ljust(mlen) + ' : ' + '*' * (width * (v / mval)).to_i
+end
+

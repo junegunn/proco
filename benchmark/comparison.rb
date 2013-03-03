@@ -9,9 +9,9 @@ require 'logger'
 
 logger = Logger.new($stdout)
 
-2.times do |i|
-  if i == 0
-    times = 5000
+[:cpu, :directio].each do |mode|
+  if mode == :cpu
+    times = 20000
     # CPU Intensive task
     task = lambda do |item|
       (1..10000).inject(:+)
@@ -25,7 +25,7 @@ logger = Logger.new($stdout)
   else
     mtx = Mutex.new
 
-    times = 500
+    times = 1000
     task = lambda do |item|
       mtx.synchronize do
         sleep 0.01 + 0.001
@@ -39,7 +39,7 @@ logger = Logger.new($stdout)
     end
   end
 
-  Benchmark.bm(45) do |x|
+  result = Benchmark.bm(45) do |x|
     x.report("loop") do
       times.times do |i|
         task.call i
@@ -92,4 +92,12 @@ logger = Logger.new($stdout)
     end
   end
 
+  data = Hash[ result.map { |r| [r.label, r.real] } ]
+  mlen = data.keys.map(&:length).max
+  mval = data.values.max
+  width = 40
+  data.each do |k, v|
+    puts k.ljust(mlen) + ' : ' + '*' * (width * (v / mval)).to_i
+  end
+  puts
 end

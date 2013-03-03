@@ -221,7 +221,9 @@ batch_task = lambda do |items|
 end
 ```
 
-#### Result (on dual core)
+#### Result
+
+TODO
 
 ### Modeling direct I/O on a single disk
 
@@ -254,7 +256,9 @@ batch_task = lambda do |items|
 end
 ```
 
-#### Result (on dual core)
+#### Result
+
+TODO
 
 Contributing
 ------------
