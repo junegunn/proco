@@ -7,7 +7,7 @@ especially designed for efficient batch processing of multiple data items.
 Requirements
 ------------
 
-Proco requires Ruby 1.8 or higher. Tested on MRI 1.8.7/1.9.3, and JRuby 1.7.3.
+Proco requires Ruby 1.8 or higher. Tested on MRI 1.8.7/1.9.3/2.0.0, and JRuby 1.7.3.
 
 Architecture
 ------------
@@ -194,8 +194,10 @@ proco.exit
 Benchmarks
 ----------
 
-Let's see how well Proco performs on different scenarios.
-Simple benchmark scripts can be found in the `benchmark` directory.
+The purpose of the benchmarks shown here is not to present absolute
+measurements of performance but to give you a general idea of how proco should
+be configured under various workloads of different characteristics.
+
 The following benchmark results were gathered on JRuby 1.7.3.
 
 ### Modeling CPU-intensive task
