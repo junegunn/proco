@@ -8,6 +8,7 @@ require 'proco/dispatcher'
 require 'proco/future'
 require 'proco/queue/base'
 require 'proco/queue/single_queue'
+require 'proco/queue/batch_queue'
 require 'proco/queue/multi_queue'
 require 'option_initializer'
 
@@ -21,12 +22,12 @@ class Proco
   include Proco::Logger
   include OptionInitializer
 
-  option_initializer :interval, :threads, :queues, :queue_size, :batch, :logger
+  option_initializer :interval, :threads, :queues, :queue_size, :batch, :batch_size, :logger
   option_validator do |opt, val|
     case opt
     when :interval
       raise ArgumentError, "interval must be a number" unless val.is_a?(Numeric)
-    when :threads, :queues, :queue_size
+    when :threads, :queues, :queue_size, :batch_size
       raise ArgumentError, "#{opt} must be a positive non-zero integer" unless val.is_a?(Fixnum) && val > 0
     when :batch
       raise ArgumentError, "batch must be a boolean value" unless [true, false].include?(val)

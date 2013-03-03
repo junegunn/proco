@@ -8,9 +8,15 @@ class Dispatcher
   def initialize proco, thread_pool, block
     super()
 
-    @logger, interval, qs, @batch =
-      proco.options.values_at :logger, :interval, :queue_size, :batch
-    @queue = (@batch ? Proco::Queue::MultiQueue : Proco::Queue::SingleQueue).new(qs)
+    @logger, interval, qs, batch, batch_size =
+      proco.options.values_at :logger, :interval, :queue_size, :batch, :batch_size
+    @queue = if batch && batch_size
+               Proco::Queue::BatchQueue.new(qs, batch_size)
+             elsif batch
+               Proco::Queue::MultiQueue.new(qs)
+             else
+               Proco::Queue::SingleQueue.new(qs)
+             end
     @pool  = thread_pool
     @block = block
 

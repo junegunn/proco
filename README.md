@@ -95,17 +95,18 @@ API of Proco is pretty minimal. The following flowchart summarizes the supported
 A Proco object can be initialized by chaining the following
 [option initializer](https://github.com/junegunn/option_initializer) methods.
 
-| Option     | Type    | Description                              |
-|------------|---------|------------------------------------------|
-| threads    | Fixnum  | number of threads in the thread pool     |
-| queues     | Fixnum  | number of concurrent queues              |
-| queue_size | Fixnum  | size of each queue                       |
-| interval   | Numeric | dispatcher interval for batch processing |
-| batch      | Boolean | enables batch processing mode            |
+| Option     | Type    | Description                                    |
+|------------|---------|------------------------------------------------|
+| threads    | Fixnum  | number of threads in the thread pool           |
+| queues     | Fixnum  | number of concurrent queues                    |
+| queue_size | Fixnum  | size of each queue                             |
+| interval   | Numeric | dispatcher interval for batch processing       |
+| batch      | Boolean | enables batch processing mode                  |
+| batch_size | Fixnum  | number of maximum items to be assigned at once |
 
 ```ruby
 # Initialization with method chaining
-proco = Proco.interval(0.1).threads(8).queues(4).queue_size(100).batch(true).new
+proco = Proco.interval(0.1).threads(8).queues(4).queue_size(100).batch(true).batch_size(10).new
 
 # Traditional initialization with options hash is also allowed
 proco = Proco.new(
@@ -113,7 +114,8 @@ proco = Proco.new(
           threads:    8,
           queues:     4,
           queue_size: 100,
-          batch:      true)
+          batch:      true,
+          batch_size: 10)
 ```
 
 ### Starting
@@ -195,7 +197,7 @@ Benchmarks
 ----------
 
 The purpose of the benchmarks shown here is not to present absolute
-measurements of performance but to give you a general idea of how proco should
+measurements of performance but to give you a general idea of how Proco should
 be configured under various workloads of different characteristics.
 
 The following benchmark results were gathered on JRuby 1.7.3.

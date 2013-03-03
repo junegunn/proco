@@ -20,6 +20,28 @@ class TestQueue < MiniTest::Unit::TestCase
     assert_equal 2, i
   end
 
+  def test_batch_queue
+    q = Proco::Queue::BatchQueue.new 100, 10
+
+    futures = 10.times.map { |i| q.push i }
+    assert_equal 1, futures.uniq.length
+
+    future = futures.first
+    future2 = q.push :next
+    assert future != future2
+
+    f, items = q.take
+    assert_equal future, f
+    assert_equal 10.times.to_a, items
+
+    f, items = q.take
+    assert_equal future2, f
+    assert_equal [:next], items
+
+    f = q.push :next
+    assert future2 != f
+  end
+
   def test_multi_queue
     q = Proco::Queue::MultiQueue.new 100
     f1 = q.push 1
