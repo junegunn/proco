@@ -4,6 +4,35 @@ Proco
 Proco is a lightweight asynchronous task executor service with a thread pool
 especially designed for efficient batch processing of multiple data items.
 
+A quick example
+---------------
+
+```ruby
+require 'proco'
+
+proco = Proco.interval(0.1).     # Runs every 0.1 second
+              threads(4).        # 4 threads processing items every interval
+              batch(true).new    # Enables batch processing mode
+
+proco.start do |items|
+  # Batch-process items and return something
+  # ...
+end
+
+# Synchronous submit
+result = proco.submit rand(1000)
+
+# Asynchronous(!) submit (can block if the queue is full)
+future = proco.submit! rand(1000)
+
+# Wait until the batch containing the item is processed
+# (Commit notification)
+result = future.get
+
+# Process remaining submissions and terminate threads
+proco.exit
+```
+
 Requirements
 ------------
 
@@ -153,44 +182,6 @@ proco.exit
 
 # Immediately kills all running threads
 proco.kill
-```
-
-Examples
---------
-
-```ruby
-require 'proco'
-
-proco = Proco.interval(0.1).     # Runs every 0.1 second
-              threads(4).        # 4 threads processing items every interval
-              queue_size(1000)   # Each thread has a queue of size 1000
-
-proco.start do |items|
-  # Batch-process items
-  items.each_slice(100) do |slice|
-    # ...
-  end
-
-  # Return code for the batch
-end
-
-# Synchronous submit
-result = proco.submit rand(1000)
-
-# Asynchronous(!) submit (can block if the queue is full)
-future = proco.submit! rand(1000)
-
-# Wait until the batch containing the item is processed
-# (Commit notification)
-result = future.get
-
-# ...
-
-# Process remaining submissions and terminate threads
-proco.exit
-
-# Or, kill them instantly
-# proco.kill
 ```
 
 Benchmarks
