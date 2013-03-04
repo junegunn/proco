@@ -46,14 +46,16 @@ class Base
       empty = @items.empty?
       unless empty
         if wait_at && @delay > 0
-          s = (wait_at + @delay) - Time.now
-          if s > 0
-            # Haven't took anything.
-            # No need to broadcast to blocked pushers
-            @mtx.unlock
-            sleep s
-            @mtx.lock
-          end
+          n = Time.now
+          t = wait_at + @delay
+          t += @delay * ((n - t) / @delay).to_i if t < n
+          t += @delay if t < n
+
+          # Haven't took anything.
+          # No need to broadcast to blocked pushers
+          @mtx.unlock
+          sleep t - n
+          @mtx.lock
         end
         break
       end
