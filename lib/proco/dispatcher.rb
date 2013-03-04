@@ -11,11 +11,11 @@ class Dispatcher
     @logger, interval, qs, batch, batch_size =
       proco.options.values_at :logger, :interval, :queue_size, :batch, :batch_size
     @queue = if batch && batch_size
-               Proco::Queue::BatchQueue.new(qs, batch_size)
+               Proco::Queue::BatchQueue.new(qs, batch_size, interval)
              elsif batch
-               Proco::Queue::MultiQueue.new(qs)
+               Proco::Queue::MultiQueue.new(qs, interval)
              else
-               Proco::Queue::SingleQueue.new(qs)
+               Proco::Queue::SingleQueue.new(qs, interval)
              end
     @pool  = thread_pool
     @block = block

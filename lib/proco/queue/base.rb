@@ -12,11 +12,12 @@ class Base
     end
   end
 
-  def initialize size
+  def initialize size, delay
     super()
-    @size   = size
-    @items  = []
-    @valid  = true
+    @size  = size
+    @delay = delay || 0
+    @items = []
+    @valid = true
   end
 
   def invalidate
@@ -40,11 +41,22 @@ class Base
 
   def take
     @mtx.lock
+    waited = false
     while true
       empty = @items.empty?
-      break unless empty
+      unless empty
+        if waited && @delay > 0
+          # Haven't took anything.
+          # No need to broadcast to blocked pushers
+          @mtx.unlock
+          sleep @delay
+          @mtx.lock
+        end
+        break
+      end
       return nil unless @valid
       @cv.wait @mtx
+      waited = true
     end
     take_impl
   ensure

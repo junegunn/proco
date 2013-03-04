@@ -4,7 +4,7 @@ class Proco
 module Queue
 # @private
 class MultiQueue < Proco::Queue::Base
-  def initialize size
+  def initialize size, delay
     super
     @future = Future.new
   end

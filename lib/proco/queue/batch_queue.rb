@@ -4,8 +4,8 @@ class Proco
 module Queue
 # @private
 class BatchQueue < Proco::Queue::Base
-  def initialize size, batch_size
-    super size
+  def initialize size, batch_size, delay
+    super size, delay
     @futures = []
     @batch_size = batch_size
   end

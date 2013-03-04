@@ -7,7 +7,7 @@ require 'lps'
 
 class TestQueue < MiniTest::Unit::TestCase
   def test_single_queue
-    q = Proco::Queue::SingleQueue.new 100
+    q = Proco::Queue::SingleQueue.new 100, nil
     f = q.push 1
     assert_instance_of Proco::Future, f
     q.push 2
@@ -21,7 +21,7 @@ class TestQueue < MiniTest::Unit::TestCase
   end
 
   def test_batch_queue
-    q = Proco::Queue::BatchQueue.new 100, 10
+    q = Proco::Queue::BatchQueue.new 100, 10, nil
 
     futures = 10.times.map { |i| q.push i }
     assert_equal 1, futures.uniq.length
@@ -43,7 +43,7 @@ class TestQueue < MiniTest::Unit::TestCase
   end
 
   def test_multi_queue
-    q = Proco::Queue::MultiQueue.new 100
+    q = Proco::Queue::MultiQueue.new 100, nil
     f1 = q.push 1
     f2 = q.push 2
     f3 = q.push 3
@@ -63,7 +63,7 @@ class TestQueue < MiniTest::Unit::TestCase
   end
 
   def test_multi_queue_complex
-    queue = Proco::Queue::MultiQueue.new(200)
+    queue = Proco::Queue::MultiQueue.new(200, nil)
     futures = []
     num_batches = 0
     num_items = 0

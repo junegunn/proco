@@ -4,7 +4,7 @@ class Proco
 module Queue
 # @private
 class SingleQueue < Proco::Queue::Base
-  def initialize size
+  def initialize size, delay
     super
   end
 
