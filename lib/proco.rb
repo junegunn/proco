@@ -94,6 +94,7 @@ class Proco
   def kill
     check_running
     @running = false
+    @dispatchers.each(&:kill)
     @pool.kill
     nil
   end
