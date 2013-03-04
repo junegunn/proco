@@ -41,22 +41,25 @@ class Base
 
   def take
     @mtx.lock
-    waited = false
+    wait_at = nil
     while true
       empty = @items.empty?
       unless empty
-        if waited && @delay > 0
-          # Haven't took anything.
-          # No need to broadcast to blocked pushers
-          @mtx.unlock
-          sleep @delay
-          @mtx.lock
+        if wait_at && @delay > 0
+          s = (wait_at + @delay) - Time.now
+          if s > 0
+            # Haven't took anything.
+            # No need to broadcast to blocked pushers
+            @mtx.unlock
+            sleep s
+            @mtx.lock
+          end
         end
         break
       end
       return nil unless @valid
+      wait_at = Time.now
       @cv.wait @mtx
-      waited = true
     end
     take_impl
   ensure
