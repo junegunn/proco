@@ -147,6 +147,7 @@ A Proco object can be initialized by chaining the following
 | interval   | Numeric | dispatcher interval for batch processing       |
 | batch      | Boolean | enables batch processing mode                  |
 | batch_size | Fixnum  | number of maximum items to be assigned at once |
+| logger     | Logger  | logger instance for debug logs                 |
 
 ```ruby
 # Initialization with method chaining
