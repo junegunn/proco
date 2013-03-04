@@ -123,7 +123,7 @@ result = Benchmark.bm(40) do |x|
   [1, 4, 16].each do |queues|
     [1, 2, 4].each do |threads|
       x.report("q: #{queues}, t: #{threads}") do
-        proco = Proco.queues(queues).logger(logger).threads(8).new
+        proco = Proco.queues(queues).logger(logger).threads(threads).new
         proco.start do |items|
           nil
         end

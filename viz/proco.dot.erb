@@ -29,7 +29,7 @@ digraph G {
       Q<%= i %> -> D<%= i %>;
     <% end %>
     }
-    subgraph cluster_threqds {
+    subgraph cluster_threads {
       label = "Executor Pool";
       <% threads.times do |t| %>
         T<%= t %> [shape = box3d, label = "Executor"];
