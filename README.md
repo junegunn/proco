@@ -5,7 +5,7 @@ Proco is a lightweight asynchronous task executor service with a thread pool
 especially designed for efficient batch processing of multiple data items.
 
 ### What Proco is
-- A lightweight, easy-to-use building block for concurrency
+- Lightweight, easy-to-use building block for concurrency in Ruby
 - High-throughput reactor for relatively simple, short-lived tasks
   - Proco can dispatch hundreds of thousands of items per second
 
@@ -47,6 +47,11 @@ Requirements
 
 Proco requires Ruby 1.8 or higher. Tested on MRI 1.8.7/1.9.3/2.0.0, and JRuby 1.7.3.
 
+Installation
+------------
+
+    gem install proco
+
 Architecture
 ------------
 
@@ -61,9 +66,9 @@ Proco is based on the traditional [producer-consumer model](http://en.wikipedia.
 - A submitted item is first put into a fixed sized queue.
 - A queue has its own dedicated dispatcher thread.
 - Each item in the queue is taken out by the dispatcher and assigned to one of the executor threads.
-  - Assignments can be done periodically at certain interval, where multiple items are assigned at once for batch processing (see next section).
+  - Assignments can be done periodically at certain interval, where multiple items are assigned at once for batch processing
 - In a highly concurrent environment, event loop of the dispatcher thread can become the bottleneck.
-  - Proco can be configured to have multiple queues and dispatcher threads
+  - Thus, Proco can be configured to have multiple queues and dispatcher threads
   - However, for strict serializability (FCFS), you should just have a single queue and a single executor thread (default).
 
 ### Proco with a single queue and thread
@@ -248,8 +253,30 @@ Proco.threads(8).queues(4).batch(true).new : *************
 
 - Proco with default configuration is slightly slower than simple loop due to thread coordination overhead
 - As we increase the number of threads performance increases as we utilize more CPU cores
-- Dispatcher thread is not the bottleneck. Increasing the number of queues and their dispatcher threads doesn't do any good
+- Dispatcher thread is not the bottleneck. Increasing the number of queues and their dispatcher threads doesn't do any good.
 - Batch mode takes longer as the tasks are not uniformly distributed among threads
+  - We can set `batch_size` to limit the maximum number of items in a batch
+
+##### Result with batch_size = 100
+
+```
+proco = Proco.batch_size(100)
+                                           : Elapsed time
+loop                                       : *********************************************************
+proco.new                                  : ************************************************************
+proco.threads(2).queues(1).new             : *******************************
+proco.threads(2).queues(1).batch(true).new : *******************************
+proco.threads(2).queues(4).new             : *******************************
+proco.threads(2).queues(4).batch(true).new : ******************************
+proco.threads(4).queues(1).new             : ****************
+proco.threads(4).queues(1).batch(true).new : ***************
+proco.threads(4).queues(4).new             : ****************
+proco.threads(4).queues(4).batch(true).new : ***************
+proco.threads(8).queues(1).new             : *********
+proco.threads(8).queues(1).batch(true).new : *********
+proco.threads(8).queues(4).new             : *********
+proco.threads(8).queues(4).batch(true).new : ********
+```
 
 ### Modeling direct I/O on a single disk
 
@@ -306,7 +333,7 @@ Proco.threads(8).queues(4).batch(true).new : ****
 ##### Analysis
 
 - The number of threads, queues or dispather threads, none of them matters
-- Batch mode show much better performance
+- Batch mode shows much better performance
 
 Contributing
 ------------
