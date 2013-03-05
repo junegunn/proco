@@ -2,19 +2,19 @@ Proco
 =====
 
 Proco is a lightweight asynchronous task executor service with a thread pool
-especially designed for efficient batch processing of multiple data items.
+especially designed for efficient batch processing of multiple objects.
 
 ### What Proco is
 - Lightweight, easy-to-use building block for concurrency in Ruby
 - High-throughput reactor for relatively simple, short-lived tasks
-  - Proco can dispatch hundreds of thousands of items per second
+  - Proco can dispatch hundreds of thousands of objects per second
 
 ### What Proco is not
 - Omnipotent "does-it-all" super gem
 - Background task schedulers like Resque or DelayedJob
 
-A quick example
----------------
+A quick demonstration
+---------------------
 
 ```ruby
 require 'proco'
@@ -335,6 +335,99 @@ Proco.threads(8).queues(4).batch(true).new : ****
 
 - The number of threads, queues or dispather threads, none of them matters
 - Batch mode shows much better performance
+
+Example
+-------
+
+Proco follows the [Unix philosophy](http://en.wikipedia.org/wiki/Unix_philosophy)
+(*"Write programs that do one thing and do it well. Write programs to work together."*)
+and targets to be a concrete building block for multi-threaded programs
+rather than to be a complete, feature-rich application by itself.
+
+Therefore, Proco comes with a minimal feature set. It may seem limiting, but it's not.
+The following examples will show you how you can implement complex features around Proco.
+
+### 1. Multi-threaded executor service for arbitrary code blocks
+
+Proco receives an object of any type via `submit` or `submit!` call.
+And yes, it can be an arbitrary Ruby block.
+
+```ruby
+proco = Proco.threads(8).new
+proco.start do |block|
+  block.call
+end
+```
+
+There. Now we have a multi-threaded task executor service.
+
+```ruby
+proco.submit! proc {
+  # "do something"
+}
+
+proco.submit! proc {
+  # "anything"
+}
+```
+
+### 2. Timeout
+
+Timeout is not a built-in feature of Proco. *It just doesn't have to be so*.
+
+```ruby
+require 'timeout'
+
+proco.start do |block|
+  Timeout::timeout(2) { block.call }
+end
+```
+
+### 2. Retrials
+
+Some task executor service may automatically retry failed task a few number of times.
+Again, it's not a built-in feature of Proco, but we can implement it in the handler.
+
+```ruby
+proco.start do |block|
+  tries = 0
+  begin
+    block.call
+  rescue Exception
+    retry if (tries += 1) < 3
+    raise
+  end
+end
+```
+
+### 4. Callbacks
+
+There's nothing so special about callbacks. We just put more logic into the handler.
+For simplicity, we will just pass Hashes instead of dedicated message objects.
+
+```
+proco.start do |hash|
+  task, complete, error =
+      hash.values_at :task, :complete, :error
+
+  begin
+    result = task.call
+    complete ? complete.call(result) : result
+  rescue Exception => e
+    error ? error.call(e) : raise
+  end
+end
+```
+
+Then we assign a task with callbacks as follows.
+
+```ruby
+proco.submit!(
+  task:     proc { rand(10) ** rand(10) / rand(2) },
+  complete: proc { |r| puts "We got #{r}" },
+  error:    proc { |e| puts "Whoa! Exception: #{e}" }
+)
+```
 
 Contributing
 ------------
