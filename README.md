@@ -336,11 +336,12 @@ Proco.threads(8).queues(4).batch(true).new : ****
 - The number of threads, queues or dispather threads, none of them matters
 - Batch mode shows much better performance
 
-Example
--------
+
+Examples
+--------
 
 Proco follows the [Unix philosophy](http://en.wikipedia.org/wiki/Unix_philosophy)
-(*"Write programs that do one thing and do it well. Write programs to work together."*)
+( *"Write programs that do one thing and do it well. Write programs to work together."* )
 and targets to be a concrete building block for multi-threaded programs
 rather than to be a complete, feature-rich application by itself.
 
