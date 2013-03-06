@@ -139,15 +139,15 @@ API of Proco is pretty minimal. The following flowchart summarizes the supported
 A Proco object can be initialized by chaining the following
 [option initializer](https://github.com/junegunn/option_initializer) methods.
 
-| Option     | Type    | Description                                    |
-|------------|---------|------------------------------------------------|
-| threads    | Fixnum  | number of threads in the thread pool           |
-| queues     | Fixnum  | number of concurrent queues                    |
-| queue_size | Fixnum  | size of each queue                             |
-| interval   | Numeric | dispatcher interval for batch processing       |
-| batch      | Boolean | enables batch processing mode                  |
-| batch_size | Fixnum  | number of maximum items to be assigned at once |
-| logger     | Logger  | logger instance for debug logs                 |
+| Option     | Type    | Default | Description                                                      |
+|------------|---------|---------|------------------------------------------------------------------|
+| threads    | Fixnum  |       1 | number of threads in the thread pool                             |
+| queues     | Fixnum  |       1 | number of concurrent queues                                      |
+| queue_size | Fixnum  |    1000 | size of each queue                                               |
+| interval   | Numeric |       0 | dispatcher interval for batch processing                         |
+| batch      | Boolean |   false | enables batch processing mode                                    |
+| batch_size | Fixnum  |     nil | number of maximum items to be assigned at once (nil = unlimited) |
+| logger     | Logger  |     nil | logger instance for debug logs                                   |
 
 ```ruby
 # Initialization with method chaining
@@ -165,13 +165,19 @@ proco = Proco.new(
 
 ### Starting
 
+Proco is started with a handler block for processing objects.
+
 ```ruby
 # Regular Proco
 proco = Proco.new
 proco.start do |item|
   # code for single item
 end
+```
 
+In batch mode, an array of items is passed to the handler.
+
+```ruby
 # Proco in batch mode
 proco = Proco.batch(true).new
 proco.start do |items|
@@ -180,6 +186,8 @@ end
 ```
 
 ### Submitting items
+
+You can submit any Ruby object either synchronously or asynchronously.
 
 ```ruby
 # Synchronous submission
@@ -232,7 +240,7 @@ end
 
 #### Result
 
-```
+```ruby
                                            : Elapsed time
 loop                                       : *********************************************************
 Proco.new                                  : ************************************************************
@@ -260,7 +268,7 @@ Proco.threads(8).queues(4).batch(true).new : *************
 
 ##### Result with batch_size = 100
 
-```
+```ruby
 proco = Proco.batch_size(100)
                                            : Elapsed time
 loop                                       : *********************************************************
@@ -313,7 +321,7 @@ end
 
 #### Result
 
-```
+```ruby
 loop                                       : ***********************************************************
 Proco.new                                  : ***********************************************************
 Proco.threads(2).queues(1).new             : ***********************************************************
@@ -345,8 +353,9 @@ Proco follows the [Unix philosophy](http://en.wikipedia.org/wiki/Unix_philosophy
 and targets to be a concrete building block for multi-threaded programs
 rather than to be a complete, feature-rich application by itself.
 
-Therefore, Proco comes with a minimal feature set. It may seem limiting, but it's not.
-The following examples will show you how you can implement complex features around Proco.
+Therefore, Proco comes with a minimal feature set.
+It may seem limiting at first, but it's not the case, as it leads to more flexibility in the end.
+The following examples will show you how you can implement more complex features around Proco.
 
 ### 1. Multi-threaded executor service for arbitrary code blocks
 
@@ -374,7 +383,8 @@ proco.submit! proc {
 
 ### 2. Timeout
 
-Timeout is not a built-in feature of Proco. *It just doesn't have to be so*.
+Proco in itself has no concept of task timeout or expiration.
+However, it is trivial to implement a timeout logic in the handler.
 
 ```ruby
 require 'timeout'
@@ -386,7 +396,7 @@ end
 
 ### 2. Retrials
 
-Some task executor service may automatically retry failed task a few number of times.
+Some task executor services may automatically retry processing on failure.
 Again, it's not a built-in feature of Proco, but we can implement it in the handler.
 
 ```ruby
@@ -403,10 +413,10 @@ end
 
 ### 4. Callbacks
 
-There's nothing so special about callbacks. We just put more logic into the handler.
+There's nothing special about callbacks. We just put more logic into the handler.
 For simplicity, we will just pass Hashes instead of dedicated message objects.
 
-```
+```ruby
 proco.start do |hash|
   task, complete, error =
       hash.values_at :task, :complete, :error
