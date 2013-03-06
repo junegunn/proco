@@ -12,6 +12,10 @@ class Future
     end
   end
 
+  def done?
+    @state != :wait
+  end
+
   def inspect
     "Future=#{@state}"
   end
