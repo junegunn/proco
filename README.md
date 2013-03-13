@@ -125,6 +125,10 @@ On JRuby or Rubinius, executor threads will run in parallel and efficiently util
 ```ruby
 # Proco with 8 executor threads
 proco = Proco.threads(8).new
+
+# Create as many threads as the number of processors
+require 'facter'
+proco = Proco.threads(Facter.processorcount.to_i).new
 ```
 
 Proco API
