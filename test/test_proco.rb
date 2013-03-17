@@ -69,7 +69,6 @@ describe Proco do
     end
 
     it "always yields Array" do
-      bool = true
       @proco.start do |items|
         assert items.is_a?(Array)
       end

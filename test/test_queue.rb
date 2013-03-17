@@ -8,16 +8,17 @@ require 'lps'
 class TestQueue < MiniTest::Unit::TestCase
   def test_single_queue
     q = Proco::Queue::SingleQueue.new 100, nil
-    f = q.push 1
-    assert_instance_of Proco::Future, f
-    q.push 2
+    fu1 = q.push 1
+    assert_instance_of Proco::Future, fu1
+    fu2 = q.push 2
 
     f2, i = q.take
-    assert_equal f, f2
+    assert_equal fu1, f2
     assert_equal 1, i
 
     f3, i = q.take
     assert_equal 2, i
+    assert_equal fu2, f3
   end
 
   def test_batch_queue
