@@ -28,6 +28,28 @@ describe Proco do
     assert_equal 8,  opts[:threads]
   end
 
+  it "raises exceptions when invalid params are passed" do
+    [-1, 0, [1, 2]].each do |arg|
+      [:threads, :queues, :queue_size].each do |m|
+        assert_raises(ArgumentError) {
+          Proco.send(m, *[*arg])
+        }
+        assert_raises(ArgumentError) {
+          Proco.batch(true).send(m, *[*arg])
+        }
+        assert_raises(ArgumentError) {
+          Proco.send(m) {}
+        }
+      end
+    end
+
+    assert_raises(TypeError)     { Proco.interval :str }
+    assert_raises(ArgumentError) { Proco.interval -1 }
+    assert_raises(ArgumentError) { Proco.interval {} }
+
+    assert_raises(ArgumentError) { Proco.batch :str }
+  end
+
   describe "in default setting" do
     before do
       @proco = Proco.new

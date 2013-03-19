@@ -11,6 +11,7 @@ require 'proco/queue/single_queue'
 require 'proco/queue/batch_queue'
 require 'proco/queue/multi_queue'
 require 'option_initializer'
+require 'set'
 
 class Array
   def sample
@@ -22,15 +23,19 @@ class Proco
   include Proco::Logger
   include OptionInitializer
 
-  option_initializer :interval, :threads, :queues, :queue_size, :batch, :batch_size, :logger
+  option_initializer :logger,
+                     :interval   => Numeric,
+                     :threads    => Fixnum,
+                     :queues     => Fixnum,
+                     :queue_size => Fixnum,
+                     :batch      => Set[true, false],
+                     :batch_size => Fixnum
   option_validator do |opt, val|
     case opt
     when :interval
-      raise ArgumentError, "interval must be a number" unless val.is_a?(Numeric)
+      raise ArgumentError, "#{opt} must be a non-negative number" if val < 0
     when :threads, :queues, :queue_size, :batch_size
-      raise ArgumentError, "#{opt} must be a positive non-zero integer" unless val.is_a?(Fixnum) && val > 0
-    when :batch
-      raise ArgumentError, "batch must be a boolean value" unless [true, false].include?(val)
+      raise ArgumentError, "#{opt} must be a positive integer" if val <= 0
     end
   end
 
@@ -41,6 +46,7 @@ class Proco
     :threads    => 1,
     :queues     => 1,
     :queue_size => 1000,
+    :batch_size => 100,
     :batch      => false
   }
 
