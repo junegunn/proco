@@ -9,7 +9,24 @@ require 'logger'
 
 logger = Logger.new($stdout)
 
-[:cpu, :directio].each do |mode|
+$mtx = Mutex.new
+
+def fwrite cnt
+  # Writes to Kernel buffer.
+  # Let's assume it's fast enough
+end
+
+def fsync cnt
+  $mtx.synchronize do
+    # Seek time: 0.01 sec
+    sleep 0.01
+
+    # Transfer time for each item: 50kB / 50MB/sec = 0.001 sec
+    sleep 0.001 * cnt
+  end
+end
+
+[:io, :io].each do |mode|
   if mode == :cpu
     times = 20000
     # CPU Intensive task
@@ -23,19 +40,15 @@ logger = Logger.new($stdout)
       end
     end
   else
-    mtx = Mutex.new
-
     times = 1000
     task = lambda do |item|
-      mtx.synchronize do
-        sleep 0.01 + 0.001
-      end
+      fwrite 1
+      fsync  1
     end
 
     btask = lambda do |items|
-      mtx.synchronize do
-        sleep 0.01 + 0.001 * items.length
-      end
+      fwrite items.length
+      fsync  items.length
     end
   end
 

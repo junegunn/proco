@@ -97,6 +97,7 @@ Notable examples includes:
 - consolidated e-mail notification
 - database batch updates
 - group commit of database transactions
+- Nagle's algorithm
 
 In this scheme, we don't process a request as soon as it arrives,
 but wait a little while hoping that we receive more requests as well,
@@ -275,70 +276,84 @@ Proco.threads(8).queues(4).batch(true).new : *************
 ```ruby
 proco = Proco.batch_size(100)
                                            : Elapsed time
-loop                                       : *********************************************************
-proco.new                                  : ************************************************************
-proco.threads(2).queues(1).new             : *******************************
-proco.threads(2).queues(1).batch(true).new : *******************************
-proco.threads(2).queues(4).new             : *******************************
-proco.threads(2).queues(4).batch(true).new : ******************************
-proco.threads(4).queues(1).new             : ****************
-proco.threads(4).queues(1).batch(true).new : ***************
-proco.threads(4).queues(4).new             : ****************
-proco.threads(4).queues(4).batch(true).new : ***************
+loop                                       : ****************************************************
+proco.new                                  : ******************************************************
+proco.threads(2).queues(1).new             : ****************************
+proco.threads(2).queues(1).batch(true).new : ****************************
+proco.threads(2).queues(4).new             : ****************************
+proco.threads(2).queues(4).batch(true).new : ***************************
+proco.threads(4).queues(1).new             : ***************
+proco.threads(4).queues(1).batch(true).new : **************
+proco.threads(4).queues(4).new             : ***************
+proco.threads(4).queues(4).batch(true).new : **************
 proco.threads(8).queues(1).new             : *********
 proco.threads(8).queues(1).batch(true).new : *********
 proco.threads(8).queues(4).new             : *********
 proco.threads(8).queues(4).batch(true).new : ********
 ```
 
-### Modeling direct I/O on a single disk
+### Modeling safe disk I/O with sync calls
 
-- We're bypassing write buffer of the Kernel
-- Time required to write data on disk is dominated by the seek time
+- Write system call returns once data is written on Kernel buffer
+- Without subsequent fsync call, data can be lost during system crash
+- Thus, in order to guarantee that our data is safely written on a permanant storage, we need fsync
+- However, fsync call is expensive as its response time is dominated by slow disk seek time, usually around 10ms
+- Which means we can only write only upto 100 data items per second on a single disk!
+- Fortunately, this limitation can be alleviated if we can reduce the number of fsync calls
+- This is where batch execution mode of Proco shines!
+
+#### Task definition
+
 - Let's assume seek time of our disk is 10ms, and data transfer rate, 50MB/sec
 - Each request writes 50kB amount of data
 - As we have only one disk, writes cannot occur concurrently
 
-#### Task definition
-
 ```ruby
 # Mutex for simulating exclusive disk access
-mtx = Mutex.new
+$mtx = Mutex.new
 
-task = lambda do |item|
-  mtx.synchronize do
+def fwrite cnt
+  # Writes to Kernel buffer.
+  # Let's assume it's fast enough
+end
+
+def fsync cnt
+  $mtx.synchronize do
     # Seek time: 0.01 sec
-    # Transfer time: 50kB / 50MB/sec = 0.001 sec
-    sleep 0.01 + 0.001
+    sleep 0.01
+
+    # Transfer time for each item: 50kB / 50MB/sec = 0.001 sec
+    sleep 0.001 * cnt
   end
 end
 
-# Let's say it makes sense to group multiple writes into a single I/O operation
+task = lambda do |item|
+  fwrite 1
+  fsync  1
+end
+
 batch_task = lambda do |items|
-  mtx.synchronize do
-    # Seek time: 0.01 sec
-    # Transfer time: n * (50kB / 50MB/sec) = n * 0.001 sec
-    sleep 0.01 + items.length * 0.001
-  end
+  fwrite items.length
+  fsync  items.length
 end
 ```
 
 #### Result
 
 ```ruby
-loop                                       : ***********************************************************
-Proco.new                                  : ***********************************************************
-Proco.threads(2).queues(1).new             : ***********************************************************
+loop                                       : ******************************************************
+Proco.new                                  : ******************************************************
+Proco.threads(2).queues(1).new             : ******************************************************
 Proco.threads(2).queues(1).batch(true).new : ****
-Proco.threads(2).queues(4).new             : ***********************************************************
+Proco.threads(2).queues(4).new             : ******************************************************
 Proco.threads(2).queues(4).batch(true).new : *****
-Proco.threads(4).queues(1).new             : ***********************************************************
+Proco.threads(4).queues(1).new             : ******************************************************
 Proco.threads(4).queues(1).batch(true).new : ****
-Proco.threads(4).queues(4).new             : ***********************************************************
+Proco.threads(4).queues(4).new             : ******************************************************
 Proco.threads(4).queues(4).batch(true).new : *****
-Proco.threads(8).queues(1).new             : ************************************************************
+Proco.threads(8).queues(1).new             : ******************************************************
 Proco.threads(8).queues(1).batch(true).new : ****
-Proco.threads(8).queues(4).new             : ***********************************************************
+Proco.threads(8).queues(4).new             : ******************************************************
 Proco.threads(8).queues(4).batch(true).new : ****
 ```
 
@@ -376,6 +391,7 @@ end
 There. Now we have a multi-threaded task executor service.
 
 ```ruby
+# Can pass a block
 proco.submit! proc {
   # "do something"
 }
