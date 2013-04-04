@@ -92,7 +92,7 @@ Batch processing
 
 Sometimes it really helps to process multiple items in batch instead of one at a time.
 
-Notable examples includes:
+Notable examples include:
 - buffered disk I/O in Kernel
 - consolidated e-mail notification
 - database batch updates
